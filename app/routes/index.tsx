@@ -56,13 +56,13 @@ export default function Index() {
     <Container>
       <Form method="post">
         <Textarea
-          placeholder="Add your message here... "
+          placeholder="Write your message here... "
           my={2}
           name="message"
         />
         <Input
           type="password"
-          placeholder="Enter your password"
+          placeholder="Enter a password"
           my={2}
           name="password"
         />
