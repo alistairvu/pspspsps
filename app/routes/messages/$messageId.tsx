@@ -113,13 +113,8 @@ const MessagePage = () => {
   return (
     <Container>
       <Form method="post">
-        <FormControl isInvalid={typeof loaderData?.error === 'string'}>
-          <Input
-            type="password"
-            placeholder="Enter password"
-            name="password"
-            my={2}
-          />
+        <FormControl isInvalid={typeof loaderData?.error === 'string'} my={2}>
+          <Input type="password" placeholder="Enter password" name="password" />
           {loaderData?.error && (
             <FormErrorMessage>{loaderData?.error}</FormErrorMessage>
           )}

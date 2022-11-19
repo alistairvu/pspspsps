@@ -1,10 +1,24 @@
-import { Button, Container, Input, Textarea } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Container,
+  Input,
+  Textarea,
+  Text,
+  Link as ChakraLink,
+} from '@chakra-ui/react';
 import type { ActionFunction } from '@remix-run/node';
-import { redirect } from '@remix-run/node';
-import { Form, useTransition } from '@remix-run/react';
+import { json } from '@remix-run/node';
+import { Form, Link, useActionData, useTransition } from '@remix-run/react';
 import { db } from '~/utils/db.server';
 import bcrypt from 'bcryptjs';
 import { Blowfish } from 'javascript-blowfish';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
+
+type ActionData = {
+  success: boolean;
+  messageId?: string;
+};
 
 export const action: ActionFunction = async ({ request }) => {
   const body = await request.formData();
@@ -24,15 +38,19 @@ export const action: ActionFunction = async ({ request }) => {
     password: hashedPassword,
   };
 
-  const newMessage = await db.message.create({
+  const { id: messageId } = await db.message.create({
     data: fields,
   });
 
-  return redirect(`/messages/${newMessage.id}`);
+  return json({
+    success: true,
+    messageId,
+  });
 };
 
 export default function Index() {
   const transition = useTransition();
+  const actionData = useActionData<ActionData>();
 
   return (
     <Container>
@@ -52,6 +70,31 @@ export default function Index() {
           {transition.state === 'submitting' ? 'Saving...' : 'Save'}
         </Button>
       </Form>
+
+      {actionData?.messageId && (
+        <Box
+          p={4}
+          my={2}
+          color="green.700"
+          backgroundColor="green.100"
+          rounded="md"
+          border="1px"
+          borderColor="green.700"
+        >
+          <Text>
+            Successfully added new message. Your message can be found{' '}
+            <ChakraLink
+              as={Link}
+              to={`/messages/${actionData.messageId}`}
+              prefetch="intent"
+            >
+              here
+              <ExternalLinkIcon mx="2px" />
+            </ChakraLink>
+            .
+          </Text>
+        </Box>
+      )}
     </Container>
   );
 }
