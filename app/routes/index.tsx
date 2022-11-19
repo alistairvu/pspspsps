@@ -59,6 +59,7 @@ export default function Index() {
           placeholder="Write your message here... "
           my={2}
           name="message"
+          rows={13}
         />
         <Input
           type="password"
