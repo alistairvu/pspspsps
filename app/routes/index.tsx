@@ -14,6 +14,7 @@ import { db } from '~/utils/db.server';
 import bcrypt from 'bcryptjs';
 import { Blowfish } from 'javascript-blowfish';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { useEffect, useRef } from 'react';
 
 type ActionData = {
   success: boolean;
@@ -52,9 +53,17 @@ export default function Index() {
   const transition = useTransition();
   const actionData = useActionData<ActionData>();
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (actionData?.success) {
+      formRef.current?.reset();
+    }
+  }, [actionData?.success]);
+
   return (
     <Container>
-      <Form method="post">
+      <Form ref={formRef} method="post">
         <Textarea
           placeholder="Write your message here... "
           my={2}
