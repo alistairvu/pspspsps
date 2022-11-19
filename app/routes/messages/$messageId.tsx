@@ -130,9 +130,9 @@ const MessagePage = () => {
 export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
   console.error(error);
   return (
-    <>
-      <p>Message does not exist, please try again.</p>
-    </>
+    <Container>
+      <Text>Message does not exist, please try again.</Text>
+    </Container>
   );
 };
 
