@@ -1,5 +1,6 @@
 import {
   Button,
+  Container,
   FormControl,
   FormErrorMessage,
   Input,
@@ -12,7 +13,7 @@ import type {
 } from '@remix-run/node';
 import { redirect } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { Form, useActionData, useLoaderData } from '@remix-run/react';
+import { Form, useLoaderData, useTransition } from '@remix-run/react';
 import { db } from '~/utils/db.server';
 import bcrypt from 'bcryptjs';
 import { Blowfish } from 'javascript-blowfish';
@@ -44,8 +45,11 @@ export const loader: LoaderFunction = async ({ params, request }) => {
   const isMatch = await bcrypt.compare(password, data.password);
 
   if (!isMatch) {
+    cookie[`${messageId}-password`] = undefined;
+
     return json({
       isUnlocked: false,
+      error: 'Wrong password',
     });
   }
 
@@ -76,24 +80,6 @@ export const action: ActionFunction = async ({ request, params }) => {
     throw new Error(`Form not submitted correctly.`);
   }
 
-  const data = await db.message.findFirst({
-    where: {
-      id: messageId,
-    },
-  });
-
-  if (data === null) {
-    throw new Error(`No matching message.`);
-  }
-
-  const isMatch = await bcrypt.compare(password, data.password);
-
-  if (!isMatch) {
-    return json({
-      error: 'Password mismatch',
-    });
-  }
-
   const cookieHeader = request.headers.get('Cookie');
   const cookie = (await passwordCookie.parse(cookieHeader)) || {};
 
@@ -106,39 +92,43 @@ export const action: ActionFunction = async ({ request, params }) => {
   });
 };
 
-type ActionData = {
-  error?: string;
-};
-
 type LoaderData = {
   isUnlocked: boolean;
   message?: string;
+  error?: string;
 };
 
 const MessagePage = () => {
   const loaderData = useLoaderData<LoaderData>();
-  const actionData = useActionData<ActionData>();
+  const transition = useTransition();
 
   if (loaderData.isUnlocked) {
     return (
-      <>
-        <Text>{loaderData?.message}</Text>
-      </>
+      <Container>
+        <Text whiteSpace="pre-wrap">{loaderData?.message}</Text>
+      </Container>
     );
   }
 
   return (
-    <>
+    <Container>
       <Form method="post">
-        <FormControl isInvalid={typeof actionData?.error === 'string'}>
-          <Input type="password" placeholder="Enter password" name="password" />
-          {actionData?.error && (
-            <FormErrorMessage>{actionData?.error}</FormErrorMessage>
+        <FormControl isInvalid={typeof loaderData?.error === 'string'}>
+          <Input
+            type="password"
+            placeholder="Enter password"
+            name="password"
+            my={2}
+          />
+          {loaderData?.error && (
+            <FormErrorMessage>{loaderData?.error}</FormErrorMessage>
           )}
         </FormControl>
-        <Button type="submit">Unlock message</Button>
+        <Button type="submit" isLoading={transition.state === 'submitting'}>
+          Unlock message
+        </Button>
       </Form>
-    </>
+    </Container>
   );
 };
 
@@ -152,3 +142,5 @@ export const ErrorBoundary: ErrorBoundaryComponent = ({ error }) => {
 };
 
 export default MessagePage;
+
+export const handle = { hydrate: true };

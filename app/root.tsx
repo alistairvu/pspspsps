@@ -9,10 +9,12 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useMatches,
 } from '@remix-run/react';
 import type { MetaFunction, LinksFunction } from '@remix-run/node'; // Depends on the runtime you choose
 
 import { ServerStyleContext, ClientStyleContext } from './context';
+import AppHeader from './components/AppHeader';
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -39,6 +41,10 @@ const Document = withEmotionCache(
   ({ children }: DocumentProps, emotionCache) => {
     const serverStyleData = useContext(ServerStyleContext);
     const clientStyleData = useContext(ClientStyleContext);
+
+    const matches = useMatches();
+
+    const includeScripts = matches.some((match) => match.handle?.hydrate);
 
     // Only executed on client
     useEffect(() => {
@@ -71,7 +77,7 @@ const Document = withEmotionCache(
         <body>
           {children}
           <ScrollRestoration />
-          <Scripts />
+          {includeScripts ? <Scripts /> : null}
           <LiveReload />
         </body>
       </html>
@@ -83,6 +89,7 @@ export default function App() {
   return (
     <Document>
       <ChakraProvider>
+        <AppHeader />
         <Outlet />
       </ChakraProvider>
     </Document>
